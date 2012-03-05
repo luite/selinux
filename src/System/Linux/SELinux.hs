@@ -114,8 +114,8 @@ getPeerCon fd       = queryCon "getPeerCon" (c_getpeercon fd)
 getPeerConRaw fd    = queryCon "getPeerConRaw" (c_getpeercon_raw fd)
 
 -- JAE testing
-getPolicyRoot       = queryAttrib c_selinux_policy_root
-getBinaryPolicyPath = queryAttrib c_selinux_binary_policy_path
+getPolicyRoot       = queryConfig c_selinux_policy_root
+getBinaryPolicyPath = queryConfig c_selinux_binary_policy_path
 
 -- TODO: move this below
 -- A helper function for reading values from the selinux config 
