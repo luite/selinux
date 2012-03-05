@@ -27,6 +27,7 @@ module System.Linux.SELinux (
   getPeerCon, getPeerConRaw
 
 -- JAE testing
+-- TODO: should these be prefixed as "getConfig" ?
  ,getPolicyRoot, getBinaryPolicyPath
 
  ) where
