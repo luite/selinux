@@ -25,7 +25,11 @@ module System.Linux.SELinux (
   lsetFileCon, lsetFileConRaw,
   fsetFileCon, fsetFileConRaw,
   getPeerCon, getPeerConRaw
-                            ) where
+
+-- JAE testing
+ ,getPolicyRoot, getBinaryPolicyPath
+
+ ) where
 
 import Control.Monad
 import Foreign.C.Types (CInt)
@@ -109,6 +113,14 @@ fsetFileConRaw fd   = withCon "fsetFileConRaw" (c_fsetfilecon_raw fd)
 getPeerCon fd       = queryCon "getPeerCon" (c_getpeercon fd)
 getPeerConRaw fd    = queryCon "getPeerConRaw" (c_getpeercon_raw fd)
 
+-- JAE testing
+getPolicyRoot       = queryAttrib c_selinux_policy_root
+getBinaryPolicyPath = queryAttrib c_selinux_binary_policy_path
+
+-- TODO: move this below
+-- A helper function for reading values from the selinux config 
+queryConfig :: IO CString -> IO String
+queryConfig f = f >>= peekCString >>= return
 
 ---------------------------------------------------------------------------
 
@@ -196,4 +208,37 @@ foreign import ccall unsafe "selinux/selinux.h fsetfilecon_raw"        c_fsetfil
 foreign import ccall unsafe "selinux/selinux.h getpeercon"             c_getpeercon             :: CInt -> Ptr CSecurityContext -> IO CInt
 foreign import ccall unsafe "selinux/selinux.h getpeercon_raw"         c_getpeercon_raw         :: CInt -> Ptr CSecurityContext -> IO CInt
 
+
+-- JAE testing
+foreign import ccall unsafe "selinux/selinux.h selinux_policy_root"    c_selinux_policy_root         :: IO CString
+foreign import ccall unsafe "selinux/selinux.h selinux_binary_policy_path"         c_selinux_binary_policy_path         :: IO CString
+{- TODO:
+/* These functions return the paths to specific files under the  
+   policy root directory. */ 
+   --extern const char *selinux_binary_policy_path(void);
+   extern const char *selinux_failsafe_context_path(void);
+   extern const char *selinux_removable_context_path(void);
+   extern const char *selinux_default_context_path(void);
+   extern const char *selinux_user_contexts_path(void);
+   extern const char *selinux_file_context_path(void);
+   extern const char *selinux_file_context_homedir_path(void);
+   extern const char *selinux_file_context_local_path(void);
+   extern const char *selinux_file_context_subs_path(void);
+   extern const char *selinux_homedir_context_path(void);
+   extern const char *selinux_media_context_path(void);
+   extern const char *selinux_virtual_domain_context_path(void);
+   extern const char *selinux_virtual_image_context_path(void);
+   extern const char *selinux_x_context_path(void);
+   extern const char *selinux_sepgsql_context_path(void);
+   extern const char *selinux_contexts_path(void);
+   extern const char *selinux_securetty_types_path(void);
+   extern const char *selinux_booleans_path(void);
+   extern const char *selinux_customizable_types_path(void);
+   extern const char *selinux_users_path(void);
+   extern const char *selinux_usersconf_path(void);
+   extern const char *selinux_translations_path(void);
+   extern const char *selinux_colors_path(void);
+   extern const char *selinux_netfilter_context_path(void);
+   extern const char *selinux_path(void);
+-}
 
