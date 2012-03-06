@@ -1,3 +1,15 @@
+{- |
+Module      : System.Linux.SELinux
+Copyright   : Luite Stegeman
+Licence     : BSD3
+
+Maintainer  : stegeman@gmail.com
+Stability   : provisional
+Portability : portable
+
+Haskell bindings for the SELinux API.
+-}
+
 {-#LANGUAGE ForeignFunctionInterface #-}
 
 {-
@@ -24,12 +36,33 @@ module System.Linux.SELinux (
   setFileCon, setFileConRaw,
   lsetFileCon, lsetFileConRaw,
   fsetFileCon, fsetFileConRaw,
-  getPeerCon, getPeerConRaw
-
--- JAE testing
--- TODO: should these be prefixed as "getConfig" ?
- ,getPolicyRoot, getBinaryPolicyPath
-
+  getPeerCon, getPeerConRaw,
+  getConfigPolicyRoot, 
+  getConfigBinaryPolicyPath,
+  getConfigFailsafeContextPath,
+  getConfigRemovableContextPath,
+  getConfigDefaultContextPath,
+  getConfigUserContextsPath,
+  getConfigFileContextPath,
+  getConfigFileContextHomedirPath,
+  getConfigFileContextLocalPath,
+  getConfigFileContextSubsPath,
+  getConfigHomedirContextPath,
+  getConfigMediaContextPath,
+  getConfigVirtualDomainContextPath,
+  getConfigVirtualImageContextPath,
+  getConfigXContextPath,
+  getConfigSepgsqlContextPath,
+  getConfigContextsPath,
+  getConfigSecurettyTypesPath,
+  getConfigBooleansPath,
+  getConfigCustomizableTypesPath,
+  getConfigUsersPath,
+  getConfigUsersconfPath,
+  getConfigTranslationsPath,
+  getConfigColorsPath,
+  getConfigNetfilterContextPath,
+  getConfigPath 
  ) where
 
 import Control.Monad
@@ -114,14 +147,32 @@ fsetFileConRaw fd   = withCon "fsetFileConRaw" (c_fsetfilecon_raw fd)
 getPeerCon fd       = queryCon "getPeerCon" (c_getpeercon fd)
 getPeerConRaw fd    = queryCon "getPeerConRaw" (c_getpeercon_raw fd)
 
--- JAE testing
-getPolicyRoot       = queryConfig c_selinux_policy_root
-getBinaryPolicyPath = queryConfig c_selinux_binary_policy_path
-
--- TODO: move this below
--- A helper function for reading values from the selinux config 
-queryConfig :: IO CString -> IO String
-queryConfig f = f >>= peekCString >>= return
+getConfigPolicyRoot               = queryConfig c_selinux_policy_root
+getConfigBinaryPolicyPath         = queryConfig c_selinux_binary_policy_path
+getConfigFailsafeContextPath      = queryConfig c_selinux_failsafe_context_path
+getConfigRemovableContextPath     = queryConfig c_selinux_removable_context_path
+getConfigDefaultContextPath       = queryConfig c_selinux_default_context_path
+getConfigUserContextsPath         = queryConfig c_selinux_user_contexts_path
+getConfigFileContextPath          = queryConfig c_selinux_file_context_path
+getConfigFileContextHomedirPath   = queryConfig c_selinux_file_context_homedir_path
+getConfigFileContextLocalPath     = queryConfig c_selinux_file_context_local_path
+getConfigFileContextSubsPath      = queryConfig c_selinux_file_context_subs_path
+getConfigHomedirContextPath       = queryConfig c_selinux_homedir_context_path
+getConfigMediaContextPath         = queryConfig c_selinux_media_context_path
+getConfigVirtualDomainContextPath = queryConfig c_selinux_virtual_domain_context_path
+getConfigVirtualImageContextPath  = queryConfig c_selinux_virtual_image_context_path
+getConfigXContextPath             = queryConfig c_selinux_x_context_path
+getConfigSepgsqlContextPath       = queryConfig c_selinux_sepgsql_context_path
+getConfigContextsPath             = queryConfig c_selinux_contexts_path
+getConfigSecurettyTypesPath       = queryConfig c_selinux_securetty_types_path
+getConfigBooleansPath             = queryConfig c_selinux_booleans_path
+getConfigCustomizableTypesPath    = queryConfig c_selinux_customizable_types_path
+getConfigUsersPath                = queryConfig c_selinux_users_path
+getConfigUsersconfPath            = queryConfig c_selinux_usersconf_path
+getConfigTranslationsPath         = queryConfig c_selinux_translations_path
+getConfigColorsPath               = queryConfig c_selinux_colors_path
+getConfigNetfilterContextPath     = queryConfig c_selinux_netfilter_context_path
+getConfigPath                     = queryConfig c_selinux_path
 
 ---------------------------------------------------------------------------
 
@@ -159,6 +210,10 @@ queryConMaybe e f = alloca $ \ptr -> do
         then return Nothing 
         else peekCString ptr' >>= \str -> c_freecon ptr' >> return (Just str)
                                           
+-- |A helper function for reading values from the selinux config file
+queryConfig :: IO CString -> IO String
+queryConfig f = f >>= peekCString >>= return
+
 
 type CSecurityContext = CString
 foreign import ccall unsafe "selinux/selinux.h is_selinux_enabled"     c_is_selinux_enabled     :: IO CInt
@@ -209,37 +264,33 @@ foreign import ccall unsafe "selinux/selinux.h fsetfilecon_raw"        c_fsetfil
 foreign import ccall unsafe "selinux/selinux.h getpeercon"             c_getpeercon             :: CInt -> Ptr CSecurityContext -> IO CInt
 foreign import ccall unsafe "selinux/selinux.h getpeercon_raw"         c_getpeercon_raw         :: CInt -> Ptr CSecurityContext -> IO CInt
 
+foreign import ccall unsafe "selinux/selinux.h selinux_policy_root"    c_selinux_policy_root    :: IO CString
 
--- JAE testing
-foreign import ccall unsafe "selinux/selinux.h selinux_policy_root"    c_selinux_policy_root         :: IO CString
-foreign import ccall unsafe "selinux/selinux.h selinux_binary_policy_path"         c_selinux_binary_policy_path         :: IO CString
-{- TODO:
-/* These functions return the paths to specific files under the  
-   policy root directory. */ 
-   --extern const char *selinux_binary_policy_path(void);
-   extern const char *selinux_failsafe_context_path(void);
-   extern const char *selinux_removable_context_path(void);
-   extern const char *selinux_default_context_path(void);
-   extern const char *selinux_user_contexts_path(void);
-   extern const char *selinux_file_context_path(void);
-   extern const char *selinux_file_context_homedir_path(void);
-   extern const char *selinux_file_context_local_path(void);
-   extern const char *selinux_file_context_subs_path(void);
-   extern const char *selinux_homedir_context_path(void);
-   extern const char *selinux_media_context_path(void);
-   extern const char *selinux_virtual_domain_context_path(void);
-   extern const char *selinux_virtual_image_context_path(void);
-   extern const char *selinux_x_context_path(void);
-   extern const char *selinux_sepgsql_context_path(void);
-   extern const char *selinux_contexts_path(void);
-   extern const char *selinux_securetty_types_path(void);
-   extern const char *selinux_booleans_path(void);
-   extern const char *selinux_customizable_types_path(void);
-   extern const char *selinux_users_path(void);
-   extern const char *selinux_usersconf_path(void);
-   extern const char *selinux_translations_path(void);
-   extern const char *selinux_colors_path(void);
-   extern const char *selinux_netfilter_context_path(void);
-   extern const char *selinux_path(void);
--}
+-- These functions return the paths to specific files under the  
+-- policy root directory.
+foreign import ccall unsafe "selinux/selinux.h selinux_binary_policy_path"          c_selinux_binary_policy_path          :: IO CString
+foreign import ccall unsafe "selinux/selinux.h selinux_failsafe_context_path"       c_selinux_failsafe_context_path       :: IO CString
+foreign import ccall unsafe "selinux/selinux.h selinux_removable_context_path"      c_selinux_removable_context_path      :: IO CString
+foreign import ccall unsafe "selinux/selinux.h selinux_default_context_path"        c_selinux_default_context_path        :: IO CString
+foreign import ccall unsafe "selinux/selinux.h selinux_user_contexts_path"          c_selinux_user_contexts_path          :: IO CString
+foreign import ccall unsafe "selinux/selinux.h selinux_file_context_path"           c_selinux_file_context_path           :: IO CString
+foreign import ccall unsafe "selinux/selinux.h selinux_file_context_homedir_path"   c_selinux_file_context_homedir_path   :: IO CString
+foreign import ccall unsafe "selinux/selinux.h selinux_file_context_local_path"     c_selinux_file_context_local_path     :: IO CString
+foreign import ccall unsafe "selinux/selinux.h selinux_file_context_subs_path"      c_selinux_file_context_subs_path      :: IO CString
+foreign import ccall unsafe "selinux/selinux.h selinux_homedir_context_path"        c_selinux_homedir_context_path        :: IO CString
+foreign import ccall unsafe "selinux/selinux.h selinux_media_context_path"          c_selinux_media_context_path          :: IO CString
+foreign import ccall unsafe "selinux/selinux.h selinux_virtual_domain_context_path" c_selinux_virtual_domain_context_path :: IO CString
+foreign import ccall unsafe "selinux/selinux.h selinux_virtual_image_context_path"  c_selinux_virtual_image_context_path  :: IO CString
+foreign import ccall unsafe "selinux/selinux.h selinux_x_context_path"              c_selinux_x_context_path              :: IO CString
+foreign import ccall unsafe "selinux/selinux.h selinux_sepgsql_context_path"        c_selinux_sepgsql_context_path        :: IO CString
+foreign import ccall unsafe "selinux/selinux.h selinux_contexts_path"               c_selinux_contexts_path               :: IO CString
+foreign import ccall unsafe "selinux/selinux.h selinux_securetty_types_path"        c_selinux_securetty_types_path        :: IO CString
+foreign import ccall unsafe "selinux/selinux.h selinux_booleans_path"               c_selinux_booleans_path               :: IO CString
+foreign import ccall unsafe "selinux/selinux.h selinux_customizable_types_path"     c_selinux_customizable_types_path     :: IO CString
+foreign import ccall unsafe "selinux/selinux.h selinux_users_path"                  c_selinux_users_path                  :: IO CString
+foreign import ccall unsafe "selinux/selinux.h selinux_usersconf_path"              c_selinux_usersconf_path              :: IO CString
+foreign import ccall unsafe "selinux/selinux.h selinux_translations_path"           c_selinux_translations_path           :: IO CString
+foreign import ccall unsafe "selinux/selinux.h selinux_colors_path"                 c_selinux_colors_path                 :: IO CString
+foreign import ccall unsafe "selinux/selinux.h selinux_netfilter_context_path"      c_selinux_netfilter_context_path      :: IO CString
+foreign import ccall unsafe "selinux/selinux.h selinux_path"                        c_selinux_path                        :: IO CString
 
