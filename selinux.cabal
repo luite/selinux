@@ -13,7 +13,7 @@ Cabal-version:       >=1.8
 
 Source-repository head
   type:     git
-  location: https://luite@github.com/luite/selinux.git
+  location: https://github.com/luite/selinux.git
 
 Library
   hs-source-dirs: src
