@@ -53,13 +53,13 @@ module System.Linux.SELinux (
  ) where
 
 import Control.Monad
-import Foreign.C.Types (CInt)
+import Foreign.C.Types (CInt(..))
 import Foreign.C.String (CString, withCString, peekCString)
 import Foreign.C.Error (throwErrnoIfMinus1, throwErrnoIfMinus1_, throwErrno)
 import Foreign.Marshal.Alloc (alloca)
 import Foreign.Ptr (Ptr, nullPtr)
 import Foreign.Storable (peek)
-import System.Posix.Types (CPid)
+import System.Posix.Types (CPid(..))
 
 
 type SecurityContext = String

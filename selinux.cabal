@@ -1,5 +1,5 @@
 Name:                selinux
-Version:             0.1
+Version:             0.1.1
 Synopsis:            SELinux bindings
 Description:         Haskell bindings for the SELinux API
 License:             BSD3
@@ -22,5 +22,5 @@ Library
   extra-libraries: selinux
   Build-depends:
     base >= 4   && < 5,
-    unix >= 2.4 && < 2.6
+    unix >= 2.4 && < 3 
 
